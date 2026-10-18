@@ -1,0 +1,336 @@
+/* ==================================================================
+   AP2 · 三维层级场景：太阳系 —— 深空风格 UI
+   ================================================================== */
+
+:root {
+  --bg: #02040a;
+  --panel-bg: rgba(9, 15, 30, 0.74);
+  --panel-border: rgba(120, 170, 255, 0.22);
+  --text: #dfe8ff;
+  --text-dim: #8fa3c8;
+  --accent: #6fb4ff;
+  --accent-soft: rgba(111, 180, 255, 0.18);
+  --warm: #ffc46b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#gl-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+#gl-canvas.dragging { cursor: grabbing; }
+
+/* ---------------- 加载遮罩 ---------------- */
+#loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(circle at 50% 45%, #0a1226 0%, #02040a 70%);
+  z-index: 50;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+#loading .spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid rgba(111, 180, 255, 0.18);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading .hint { font-size: 12px; color: #5b6b8a; }
+#loading code { color: var(--warm); }
+
+/* ---------------- 标题 ---------------- */
+#title-bar {
+  position: fixed;
+  top: 20px;
+  left: 24px;
+  z-index: 10;
+  pointer-events: none;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+}
+#title-bar h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #eaf2ff;
+}
+#title-bar .subtitle {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* ---------------- 控制面板 ---------------- */
+#panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 310px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  z-index: 10;
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+#panel.collapsed .group { display: none; }
+#panel.collapsed { width: 132px; }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+#btn-collapse {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  line-height: 1;
+  border-radius: 6px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+#btn-collapse:hover { color: var(--text); border-color: var(--accent); }
+
+.group {
+  padding: 11px 0;
+  border-top: 1px solid rgba(120, 170, 255, 0.12);
+}
+.group:first-of-type { border-top: none; padding-top: 2px; }
+.group h3 {
+  margin: 0 0 9px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+/* 滑条行 */
+.row {
+  display: grid;
+  grid-template-columns: 66px 1fr 52px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+}
+.row .label { color: #b9c9e6; }
+.row output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-size: 12px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(111, 180, 255, 0.55), rgba(111, 180, 255, 0.12));
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #dceaff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 10px rgba(111, 180, 255, 0.7);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #dceaff;
+  border: 2px solid var(--accent);
+}
+
+/* 复选框 */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+  font-size: 12.5px;
+  color: #c4d3ec;
+  cursor: pointer;
+  user-select: none;
+}
+.check input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  border: 1px solid rgba(140, 180, 240, 0.45);
+  background: rgba(10, 20, 40, 0.7);
+  cursor: pointer;
+  position: relative;
+}
+.check input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(111, 180, 255, 0.55);
+}
+.check input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #04101f;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* 按钮 */
+.btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 7px;
+}
+.btn-grid button {
+  padding: 7px 6px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(140, 180, 240, 0.28);
+  background: rgba(20, 34, 62, 0.75);
+  color: #cdddf6;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.btn-grid button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: #eaf3ff;
+}
+.btn-grid button.active {
+  border-color: var(--accent);
+  background: rgba(111, 180, 255, 0.26);
+  color: #ffffff;
+}
+
+.desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: #9fb4d6;
+}
+
+#panel::-webkit-scrollbar { width: 6px; }
+#panel::-webkit-scrollbar-thumb {
+  background: rgba(120, 170, 255, 0.25);
+  border-radius: 3px;
+}
+
+/* ---------------- HUD ---------------- */
+#hud {
+  position: fixed;
+  left: 24px;
+  bottom: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #a9bcdc;
+  background: rgba(9, 15, 30, 0.6);
+  border: 1px solid rgba(120, 170, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+#hud .sep { color: rgba(120, 170, 255, 0.35); }
+#hud-projection { color: var(--accent); }
+
+/* ---------------- 操作说明 ---------------- */
+#help {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  font-size: 12px;
+  color: #9fb4d6;
+}
+#help details {
+  background: rgba(9, 15, 30, 0.6);
+  border: 1px solid rgba(120, 170, 255, 0.16);
+  border-radius: 10px;
+  padding: 8px 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#help summary { cursor: pointer; color: #c4d3ec; }
+#help ul { margin: 9px 0 0; padding-left: 18px; line-height: 1.9; }
+#help b { color: var(--warm); font-weight: 600; }
+
+/* ---------------- 截图模式：隐藏 UI ---------------- */
+body.hide-ui #panel,
+body.hide-ui #title-bar,
+body.hide-ui #hud,
+body.hide-ui #help { display: none; }
+
+/* 窄屏适配：面板改为底部抽屉 */
+@media (max-width: 720px) {
+  #panel {
+    top: auto;
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: 46vh;
+  }
+  #title-bar h1 { font-size: 15px; }
+  #help { display: none; }
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AP2 · 三维层级场景：太阳系</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 全屏 WebGL 画布 -->
+  <canvas id="gl-canvas"></canvas>
+
+  <!-- 加载遮罩 -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>正在加载纹理与着色器…</p>
+    <p class="hint">（请通过静态服务器访问，例如 <code>python -m http.server</code>）</p>
+  </div>
+
+  <!-- 标题 -->
+  <header id="title-bar">
+    <h1>AP2 · 三维层级场景：太阳系</h1>
+    <p class="subtitle">太阳 → 地球 → 月球 三级变换嵌套 · 原生 WebGL 2.0</p>
+  </header>
+
+  <!-- 参数面板 -->
+  <aside id="panel">
+    <div class="panel-head">
+      <h2>控制面板</h2>
+      <button id="btn-collapse" title="收起 / 展开面板">−</button>
+    </div>
+
+    <section class="group">
+      <h3>运动</h3>
+      <label class="row">
+        <span class="label">公转速度</span>
+        <input id="orbit-speed" type="range" min="0" max="3" step="0.05" value="1">
+        <output id="orbit-speed-val">1.00×</output>
+      </label>
+      <label class="row">
+        <span class="label">自转速度</span>
+        <input id="spin-speed" type="range" min="0" max="3" step="0.05" value="1">
+        <output id="spin-speed-val">1.00×</output>
+      </label>
+      <label class="row">
+        <span class="label">地轴倾角</span>
+        <input id="axial-tilt" type="range" min="0" max="90" step="0.01" value="23.44">
+        <output id="axial-tilt-val">23.4°</output>
+      </label>
+      <label class="check">
+        <input id="demo-wrong-order" type="checkbox">
+        变换顺序演示（错误：倾斜作用在轨道上，地球“点头”）
+      </label>
+    </section>
+
+    <section class="group">
+      <h3>显示</h3>
+      <label class="check"><input id="show-orbits" type="checkbox" checked> 轨道线</label>
+      <label class="check"><input id="show-belt" type="checkbox" checked> 小行星带（E1）</label>
+      <label class="check"><input id="show-rings" type="checkbox" checked> 土星环（E1）</label>
+      <label class="check"><input id="show-stars" type="checkbox" checked> 星空</label>
+      <label class="check"><input id="trackball-mode" type="checkbox"> 轨迹球视角（E3）</label>
+    </section>
+
+    <section class="group">
+      <h3>相机与投影</h3>
+      <div class="btn-grid">
+        <button id="btn-pause">暂停运动 (P)</button>
+        <button id="btn-roam">暂停漫游 (空格)</button>
+        <button id="btn-projection">正交投影 (O)</button>
+        <button id="btn-reset">重置视角 (R)</button>
+      </div>
+      <div class="btn-grid">
+        <button id="btn-overview">总览 (1)</button>
+        <button id="btn-earth">地球特写 (2)</button>
+        <button id="btn-solar">日食视角 (3)</button>
+        <button id="btn-lunar">月食视角 (4)</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h3>日食 / 月食说明（E2）</h3>
+      <p id="eclipse-desc" class="desc">当前未进入日食/月食演示。按 3 / 4 查看。</p>
+    </section>
+  </aside>
+
+  <!-- 状态 HUD -->
+  <footer id="hud">
+    <span id="hud-projection">透视投影</span>
+    <span class="sep">·</span>
+    <span id="hud-mode">预设漫游</span>
+    <span class="sep">·</span>
+    <span id="hud-time">t = 0.0 s</span>
+  </footer>
+
+  <!-- 操作说明 -->
+  <div id="help">
+    <details>
+      <summary>操作说明</summary>
+      <ul>
+        <li><b>空格</b> 暂停 / 继续相机漫游</li>
+        <li><b>O</b> 正交 / 透视投影切换</li>
+        <li><b>P</b> 暂停 / 继续天体运动</li>
+        <li><b>R</b> 重置视角</li>
+        <li><b>T</b> 虚拟轨迹球模式（E3）</li>
+        <li><b>L</b> 显示 / 隐藏轨道线</li>
+        <li><b>1 / 2 / 3 / 4</b> 总览 / 地球特写 / 日食 / 月食</li>
+        <li><b>鼠标左键拖拽</b> 旋转视角（随时接管漫游）</li>
+        <li><b>滚轮</b> 推近 / 拉远</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- 教材 Common 工具库（经典脚本，先于 ES Module 加载） -->
+  <script src="lib/webgl-utils.js"></script>
+  <script src="lib/initShaders.js"></script>
+  <script src="lib/MV.js"></script>
+  <!-- 应用入口（ES Module） -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+{
+  "project": "AP2 - 三维层级场景：太阳系 (WebGL 2.0)",
+  "generator": "tools/make_textures.py",
+  "reproducible": true,
+  "seed": 20251018,
+  "networkAssets": false,
+  "coordinateConvention": {
+    "projection": "equirectangular（等距圆柱投影）",
+    "northPole": "图像顶部（第 0 行） = 纬度 +90°",
+    "southPole": "图像底部（最后一行） = 纬度 -90°",
+    "longitudeZero": "图像水平中心（u=0.5）= 经度 0°",
+    "longitudeRange": "左缘 u=0 = 经度 -180°，右缘 u=1 = 经度 +180°，向东递增",
+    "verticalAxis": "图像第 0 行 = 纬度 +90°（北极），最后一行 = 纬度 -90°（南极）",
+    "webglFlipY": "若上传时 UNPACK_FLIP_Y_WEBGL=true，则 v=1 对应图像顶行（北极）、v=0 对应底行（南极）；flipY=false 时相反",
+    "longitudeSeam": "所有球面贴图在经度方向闭合：u=0 与 u=1 为同一经线，首末列连续，球面接缝不可见",
+    "poleConvergence": "噪声在单位球面三维坐标上采样，极点处经度收敛，无接缝/旋涡伪影",
+    "legend": "seamCheck 中 edgeColumnMeanAbsDiff 为 |首列-末列| 平均差，adjacentColumnMeanAbsDiff 为同图相邻列平均差；两者接近即经度无缝"
+  },
+  "textures": [
+    {
+      "file": "earth.png",
+      "width": 2048,
+      "height": 1024,
+      "mode": "RGB",
+      "usage": "地球表面球面贴图（等距圆柱：海陆分布、极冠、云斑）",
+      "method": "陆核偏置调制局部海平面 + 8 阶 fBm 高程等值线生成分形海岸；高程/水深/湿度/沙漠/冰盖/云斑分层着色",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 1.12923,
+        "adjacentColumnMeanAbsDiff": 0.84844,
+        "ratio": 1.3309,
+        "leftNeighborMeanAbsDiff": 1.23307,
+        "rightNeighborMeanAbsDiff": 1.00521,
+        "seamPercentileAmongAdjacentColumns": 78.2
+      }
+    },
+    {
+      "file": "moon.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "月球表面球面贴图（灰色月面、密集陨石坑、深色月海）",
+      "method": "球面域 fBm 灰色基底 + 低频谱月海 + 610 个幂律分布陨石坑（局部包围盒盖章、高频噪声揉皱坑缘）",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 2.15234,
+        "adjacentColumnMeanAbsDiff": 1.66161,
+        "ratio": 1.2953,
+        "leftNeighborMeanAbsDiff": 1.67383,
+        "rightNeighborMeanAbsDiff": 2.67969,
+        "seamPercentileAmongAdjacentColumns": 83.4
+      }
+    },
+    {
+      "file": "sun.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "太阳表面球面贴图（米粒组织、少量黑子、整体高亮）",
+      "method": "球面域 fBm 脊状（ridged）噪声生成对流米粒 + 低频亮度扰动 + 6 个黑子（本影/半影）",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 6.73763,
+        "adjacentColumnMeanAbsDiff": 7.21103,
+        "ratio": 0.9344,
+        "leftNeighborMeanAbsDiff": 7.88607,
+        "rightNeighborMeanAbsDiff": 6.46354,
+        "seamPercentileAmongAdjacentColumns": 16.9
+      }
+    },
+    {
+      "file": "mercury.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "水星表面球面贴图（灰褐色、密集陨石坑）",
+      "method": "球面域 fBm 灰褐基底 + 暗色平原 + 662 个覆盖式陨石坑（局部包围盒盖章、高频噪声揉皱坑缘）",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 1.21484,
+        "adjacentColumnMeanAbsDiff": 1.5735,
+        "ratio": 0.7721,
+        "leftNeighborMeanAbsDiff": 1.28906,
+        "rightNeighborMeanAbsDiff": 1.53841,
+        "seamPercentileAmongAdjacentColumns": 23.9
+      }
+    },
+    {
+      "file": "venus.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "金星表面球面贴图（黄白色硫酸云、柔和条带/旋涡）",
+      "method": "经度无缝 fBm 扭曲的纬度正弦条带 + 多尺度噪声，映射到黄白/浅黄色阶",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 0.15755,
+        "adjacentColumnMeanAbsDiff": 0.18495,
+        "ratio": 0.8519,
+        "leftNeighborMeanAbsDiff": 0.15951,
+        "rightNeighborMeanAbsDiff": 0.14779,
+        "seamPercentileAmongAdjacentColumns": 19.7
+      }
+    },
+    {
+      "file": "mars.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "火星表面球面贴图（红橙色、暗色反照率区域、两极小极冠）",
+      "method": "球面域 fBm 红橙基底 + 域扭曲暗区 + 风成亮尘 + 稀疏小陨石坑 + 带噪声边缘的明亮极冠",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 0.42969,
+        "adjacentColumnMeanAbsDiff": 0.51279,
+        "ratio": 0.8379,
+        "leftNeighborMeanAbsDiff": 0.4987,
+        "rightNeighborMeanAbsDiff": 0.43359,
+        "seamPercentileAmongAdjacentColumns": 21.8
+      }
+    },
+    {
+      "file": "jupiter.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "木星表面球面贴图（米色/橙色/棕色水平云带、带边湍流、大红斑）",
+      "method": "多尺度纬度扰动 + 高对比纬度色带查找表 + 沿经度拉长湍流 + 带浅色外晕的大红斑",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 0.27083,
+        "adjacentColumnMeanAbsDiff": 0.34096,
+        "ratio": 0.7943,
+        "leftNeighborMeanAbsDiff": 0.24284,
+        "rightNeighborMeanAbsDiff": 0.26042,
+        "seamPercentileAmongAdjacentColumns": 7.5
+      }
+    },
+    {
+      "file": "saturn.png",
+      "width": 1024,
+      "height": 512,
+      "mode": "RGB",
+      "usage": "土星表面球面贴图（低对比米黄色水平云带）",
+      "method": "纬度色带查找表 + 多尺度球面域 fBm 带边扰动（对比度约为木星一半）+ 轻微柔化",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 0.0651,
+        "adjacentColumnMeanAbsDiff": 0.06541,
+        "ratio": 0.9954,
+        "leftNeighborMeanAbsDiff": 0.06315,
+        "rightNeighborMeanAbsDiff": 0.05664,
+        "seamPercentileAmongAdjacentColumns": 47.8
+      }
+    },
+    {
+      "file": "uranus.png",
+      "width": 512,
+      "height": 256,
+      "mode": "RGB",
+      "usage": "天王星表面球面贴图（淡青色、几乎无特征）",
+      "method": "极低对比纬度条带 + 球面域 fBm 微扰，淡青色阶",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 0.04948,
+        "adjacentColumnMeanAbsDiff": 0.05659,
+        "ratio": 0.8743,
+        "leftNeighborMeanAbsDiff": 0.03776,
+        "rightNeighborMeanAbsDiff": 0.0651,
+        "seamPercentileAmongAdjacentColumns": 26.0
+      }
+    },
+    {
+      "file": "neptune.png",
+      "width": 512,
+      "height": 256,
+      "mode": "RGB",
+      "usage": "海王星表面球面贴图（深蓝色、少量亮色云团）",
+      "method": "低对比纬度条带 + 球面域 fBm 深蓝纹理 + 阈值化拉长云团",
+      "seamlessLongitude": true,
+      "seamCheck": {
+        "edgeColumnMeanAbsDiff": 0.17839,
+        "adjacentColumnMeanAbsDiff": 0.24959,
+        "ratio": 0.7147,
+        "leftNeighborMeanAbsDiff": 0.14453,
+        "rightNeighborMeanAbsDiff": 0.14844,
+        "seamPercentileAmongAdjacentColumns": 48.7
+      }
+    },
+    {
+      "file": "saturn_ring.png",
+      "width": 1024,
+      "height": 64,
+      "mode": "RGBA",
+      "usage": "土星环径向贴图（u=0 内缘 -> u=1 外缘；多条明暗环带 + 卡西尼缝）",
+      "method": "径向一维分层环带剖面 + 正弦细纹 + 高斯噪点；3 处环缝 + 内外缘 alpha 渐隐 + 逐行噪声",
+      "seamlessLongitude": false,
+      "uvConvention": "u 沿半径方向：u=0 为内缘，u=1 为外缘；v 与角度无关（各行几乎一致）",
+      "alphaFade": {
+        "inner": 0.05,
+        "outer": 0.05
+      },
+      "mainGap": {
+        "name": "Cassini Division",
+        "uRange": [
+          0.585,
+          0.64
+        ]
+      }
+    },
+    {
+      "file": "glow.png",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "usage": "白色径向光晕（太阳辉光 / 星点 sprite）",
+      "method": "极坐标径向 alpha 衰减 (1-r)^1.9，白色 RGB，边缘 alpha 严格为 0",
+      "seamlessLongitude": false,
+      "uvConvention": "UV 覆盖整张四边形；中心 alpha≈1，半径 1 处 alpha=0"
+    }
+  ]
+}
