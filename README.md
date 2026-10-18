@@ -4,6 +4,9 @@
 > 教材：Angel & Shreiner, *Interactive Computer Graphics*, 8th ed.（Ch4–Ch5）
 > 技术栈：**原生 WebGL 2.0 + JavaScript（ES Module）**，使用教材配套 `Common/` 风格工具库
 >（`MV.js` / `initShaders.js` / `webgl-utils.js`），**无构建步骤**，任意静态服务器直接运行。
+>
+> 🌐 **在线演示：<https://x1nghe159.github.io/AP2/>** （GitHub Pages）
+> 📦 源码仓库：<https://github.com/X1ngHe159/AP2>
 
 ![总览 · 透视投影](docs/screenshots/01-overview-perspective.png)
 
@@ -37,6 +40,12 @@
 
 项目是纯静态站点，**没有构建步骤、没有 npm 依赖**。
 
+### 在线运行（提交用 URL）
+
+**<https://x1nghe159.github.io/AP2/>** —— 由 GitHub Pages 托管，点开即可运行。
+
+源码仓库：<https://github.com/X1ngHe159/AP2>。
+
 ### 本地运行
 
 ```bash
@@ -51,12 +60,12 @@ node tools/serve.mjs            # 默认 http://127.0.0.1:8123/
 > **不要直接双击 `index.html`（file://）**：ES Module 与 `gl.texImage2D` 加载本地图片都受浏览器
 > 同源策略限制，必须通过 http(s) 访问。
 
-### 部署到公网（提交用 URL）
+### 部署到其它静态托管
 
 把**整个目录**（`index.html`、`css/`、`lib/`、`src/`、`assets/`）原样上传到任意静态托管即可，
 无需任何配置：
 
-- **GitHub Pages**：推到仓库 → Settings → Pages → 分支 `main` / 目录 `/`；
+- **GitHub Pages**：推到仓库 → Settings → Pages → 分支 `main` / 目录 `/`（本项目即如此部署）；
 - 或 Netlify / Vercel / 学校主页空间 / 对象存储静态托管。
 
 因为路径全部是相对路径，放在子目录（如 `https://xxx.github.io/AP2/`）也能直接运行。
