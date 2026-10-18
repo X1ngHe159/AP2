@@ -425,6 +425,15 @@ export class CameraController {
     this.eye = this._sphericalToEye(this.orbit);
   }
 
+  /** 直接设置 eye / target（调试与截图用，例如"相机放在天体与太阳之间"） */
+  setEyeTarget(eye, target) {
+    this.roamEnabled = false;
+    this.follow = null;
+    this.target = [...target];
+    this.eye = [...eye];
+    this._eyeToSpherical();
+  }
+
   setTrackballMode(enabled) {
     this.trackballMode = enabled;
     if (enabled) {

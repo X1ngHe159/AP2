@@ -487,6 +487,13 @@ function runCapture(params) {
     });
   }
 
+  // 可选：eye=x,y,z&target=x,y,z 直接指定相机与观察点（调试用）
+  const eyeParam = params.get('eye');
+  const targetParam = params.get('target');
+  if (eyeParam && targetParam) {
+    camera.setEyeTarget(eyeParam.split(',').map(Number), targetParam.split(',').map(Number));
+  }
+
   ui.syncAll();
   ui.setRoamLabel(camera.roamEnabled);
   camera.update(0, scene.positions);

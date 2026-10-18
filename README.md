@@ -124,9 +124,11 @@ AP2/
 │   ├── make_textures.py       # 纹理生成脚本（numpy + Pillow，固定种子可复现）
 │   ├── test-mv.mjs            # 矩阵库单元测试（72 项）
 │   ├── test-ext.mjs           # 扩展模块单元测试（106 项）
+│   ├── test-geometry.mjs      # 球体几何回归测试（9 项：法线朝外/绕序/单位圆）
 │   ├── smoke.mjs              # 无头浏览器交互冒烟测试（14 项）
 │   ├── serve.mjs              # 零依赖静态服务器
 │   ├── capture.mjs            # DevTools 协议无头截图 / 录屏帧采集
+│   ├── shot.mjs               # 单张截图工具（可截本地或线上地址，便于验机位）
 │   ├── make_gif.py            # 帧序列 → 10 秒漫游 GIF
 │   └── make_zip.py            # 打包提交用的源码 zip
 └── docs/
@@ -505,6 +507,9 @@ node tools/test-mv.mjs          # 72 项全部通过
 # 扩展模块单元测试（轨迹球、环几何、小行星带、日食阴影锥）
 node tools/test-ext.mjs         # 106 项全部通过
 
+# 球体几何回归测试（法线朝外、三角形绕序、单位圆、四边形）
+node tools/test-geometry.mjs    # 9 项全部通过
+
 # 浏览器端交互冒烟测试（无头 Edge 驱动：键盘/鼠标/投影/日食演示）
 node tools/smoke.mjs            # 14 项全部通过
 
@@ -517,6 +522,9 @@ python tools/make_gif.py
 
 # 打包提交用 zip
 python tools/make_zip.py
+
+# 单张截图（排查某个机位/参数下的画面，也可直接截线上地址）
+node tools/shot.mjs "capture=1&preset=earth" out.png --url https://x1nghe159.github.io/AP2/
 ```
 
 截图由 `tools/capture.mjs` 通过 **Chrome DevTools Protocol** 驱动无头 Edge：
@@ -548,7 +556,7 @@ python tools/make_zip.py
 | 层级与变换正确性 | 3 | 三级嵌套 `sun→earth→moon`（4.1）；倾角"先转后挂"并附错误顺序对照；月球轨道面倾角手造矩阵（4.2，`src/transforms.js`） |
 | 观察与投影 | 2 | `O` 键双投影切换 + 同场景对比图与差异说明（4.4）；关键帧 Catmull-Rom 漫游、空格暂停、鼠标随时接管（4.5） |
 | 交互与面板 | 2 | 公转/自转速度、轴倾角、轨道线/小行星带/土星环开关、投影/漫游/预设按钮全部生效（4.6、第 6 节） |
-| 代码质量 | 1 | 参数集中配置（`config.js`）；几何 / 场景 / 相机 / 渲染 / 交互 / UI / 数学拆成 15 个模块；矩阵库 72 项、扩展模块 106 项、浏览器交互 14 项测试全部通过 |
+| 代码质量 | 1 | 参数集中配置（`config.js`）；几何 / 场景 / 相机 / 渲染 / 交互 / UI / 数学拆成 15 个模块；矩阵库 72 项、扩展模块 106 项、球体几何 9 项、浏览器交互 14 项测试全部通过 |
 | README 与演示 | 1 | 本文档含变换嵌套树、矩阵逐元素推导、UV 数据流、双投影对比、10 秒漫游录屏、评分对照 |
 | 选做扩展 | +2 | E1 完整太阳系 + 土星环 + 小行星带；E2 日食/月食模拟 + 阴影锥可视化；E3 虚拟轨迹球（第 5 节） |
 

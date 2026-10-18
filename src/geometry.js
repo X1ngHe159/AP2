@@ -49,9 +49,11 @@ export function createSphere(latBands = 40, longBands = 80) {
       const first = lat * (longBands + 1) + lon;
       const second = first + longBands + 1;
 
-      // 两个三角形，外侧逆时针绕序（配合 gl.CULL_FACE / gl.BACK）
-      indices.push(first, second, first + 1);
-      indices.push(second, second + 1, first + 1);
+      // 两个三角形，从球外看为逆时针绕序（配合 gl.CULL_FACE / gl.BACK）。
+      // 注意：绕序必须与"法线朝外"一致，否则背面剔除会剔掉外表面、渲染内表面，
+      // 表现为"光照方向整体反向"（面向太阳的一面反而变黑）。
+      indices.push(first, first + 1, second);
+      indices.push(second, first + 1, second + 1);
     }
   }
 
