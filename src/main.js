@@ -411,6 +411,8 @@ function enterEclipse(mode, view = 'side') {
   if (view === 'surface') {
     camera.setSurfaceLook(mode === 'solar' ? 'sun' : 'moon');
     camera.setPreset('earth-surface', scene.positions);
+    // 站在地面上看不到"阴影锥"这种空间辅助图形，进入地表视角时先关掉（可随时用 C 再打开）
+    state.showCones = false;
   } else {
     camera.setPreset(mode === 'solar' ? 'solar-eclipse' : 'lunar-eclipse', scene.positions);
   }
@@ -503,6 +505,8 @@ function runCapture(params) {
       camera.setSurfaceLook(
         params.get('look') === 'moon' || eclipseMode === 'lunar' ? 'moon' : 'sun'
       );
+      // 站在地面看不到阴影锥这种空间辅助图形，默认关掉（与交互进入时一致）
+      state.showCones = flag('cones', false);
     }
     camera.setPreset(preset, scene.positions);
   }

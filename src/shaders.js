@@ -96,10 +96,13 @@ void main() {
     float lighting = uAmbient + (1.0 - uAmbient) * ndl * sunVisible;
     vec3 color = mix(base * lighting, base, uEmissive);
 
-    // 月全食：进入地球本影的月球表面呈暗红色（模拟地球大气折射的红光）
+    // 月全食：进入地球本影的月球表面呈暗红色（模拟地球大气折射的红光）。
+    // 红光来自地球大气边缘，只照亮月球朝向地球（≈朝向太阳）的那一面；
+    // 背面没有光照，保持暗黑，不能整体染红。
     if (uOccRedTint > 0.5) {
+        float facing = max(dot(N, L), 0.0);
         vec3 blood = base * vec3(1.15, 0.28, 0.15) * 0.42;
-        color = mix(color, blood, occ * 0.9);
+        color = mix(color, blood, occ * 0.9 * facing);
     }
 
     fragColor = vec4(color, 1.0);

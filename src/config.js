@@ -20,7 +20,7 @@ export const CONFIG = {
   sun: {
     id: 'sun',
     name: '太阳',
-    radius: 4.0,
+    radius: 3.0,
     spinPeriodSec: 45,          // 自转一周的可视化时间
     texture: 'sun.png',
     color: [1.0, 0.96, 0.86],
@@ -44,8 +44,10 @@ export const CONFIG = {
     moon: {
       id: 'moon',
       name: '月球',
-      radius: 0.40,
-      orbitRadius: 1.9,
+      radius: 0.52,
+      // 轨道半径取 3.5（≈ 3 倍地球半径）：既保证日全食（本影锥长 3.67 > 3.5），
+      // 又让"从地球表面看月亮"不会大到占满画面（80° 视野下约占 34%）。
+      orbitRadius: 3.5,
       orbitPeriodSec: 2.6,
       // 潮汐锁定：自转周期 = 公转周期（场景代码中月球不再额外自转，
       // 由轨道节点带着转，所以同一面永远朝向地球）
@@ -104,10 +106,12 @@ export const CONFIG = {
   ],
 
   /* ---------------- 选做 E1：小行星带 ---------------- */
+  // 位置夹在火星（28，外缘 28.74）与木星（40，内缘 36.9）之间，
+  // 不与任何行星重叠。
   asteroidBelt: {
     count: 1500,
-    innerRadius: 32.0,
-    outerRadius: 38.0,
+    innerRadius: 30.5,
+    outerRadius: 36.0,
     thickness: 0.55,
     minSize: 0.035,
     maxSize: 0.16,

@@ -107,7 +107,7 @@ export class CameraController {
   update(dt, positions) {
     // 地表视角：相机贴在地球表面（日-地连线上向太阳的一侧），每帧跟随天体位置重算，
     // 抬头看太阳（日食）或看月亮（月食）。这是 E2 的"地面观测者"视角。
-    // 相机会稍微偏离日-地连线：日食时月球只比太阳大一点点，完全正对会遮成一片黑，
+    // 相机会稍微偏离日-地连线：日食时月球只比太阳大一点，完全正对会遮成一片黑，
     // 偏一点才能看到"钻石环"（太阳边缘的一线光）；月食时让月亮不完全居中。
     if (this.follow === 'earth-surface' && positions && positions.earth) {
       const E = positions.earth;
@@ -120,9 +120,10 @@ export class CameraController {
       } else {
         const sunDir = normalize3(scale3v(E, -1));   // 地球 → 太阳（太阳在原点）
         const side = normalize3(cross3([0, 1, 0], sunDir));
+        // 地表看月球（距离约 2.2）的角半径比从地心看更大，偏移 0.22 才能露出太阳边缘
         this.eye = add3(E, add3(
           scale3v(sunDir, R + 0.18),
-          add3(scale3v(side, 0.06), scale3v([0, 1, 0], 0.04))
+          add3(scale3v(side, 0.22), scale3v([0, 1, 0], 0.10))
         ));
         this.target = [0, 0, 0];
       }
@@ -392,8 +393,9 @@ export class CameraController {
     switch (name) {
       case 'earth': {
         // 地球特写：从侧面偏上方看，能看到轴倾角、月球与月球轨道
+        // （月球轨道 3.5，所以机位要退到 ~8.7 才能把月球轨道整个收进画面）
         target = [...E];
-        eye = add3(E, add3(scale3v(side, 5.2), add3(scale3v(up, 2.6), scale3v(dir, -1.4))));
+        eye = add3(E, add3(scale3v(side, 7.6), add3(scale3v(up, 3.8), scale3v(dir, -2.0))));
         this.follow = 'earth';
         break;
       }
@@ -404,16 +406,17 @@ export class CameraController {
         break;
       }
       case 'solar-eclipse': {
-        // 从向阳侧上方看：既能看见地球亮面，也能看见落在地球上的本影/半影暗区
-        target = add3(E, scale3v(dir, -0.3));
-        eye = add3(E, add3(scale3v(side, 5.4), add3(scale3v(up, 2.8), scale3v(dir, -2.4))));
+        // 侧面偏上方看：地球（左）、月球（右，在地球向阳侧 3.5）与打在地球上的阴影锥
+        // 同时入画，能看清"月球挡在太阳与地球之间，本影/半影落在地球上"。
+        target = add3(E, scale3v(dir, -1.75));
+        eye = add3(E, add3(scale3v(side, 10.0), scale3v(up, 3.2)));
         this.follow = 'earth';
         break;
       }
       case 'lunar-eclipse': {
-        // 侧上方看地球本影锥把月球包住：月球在地球背日一侧
-        target = add3(E, scale3v(dir, 1.6));
-        eye = add3(E, add3(scale3v(side, 8.0), add3(scale3v(up, 3.0), scale3v(dir, 1.6))));
+        // 侧上方看地球本影锥把月球包住：月球在地球背日一侧（轨道 3.5）
+        target = add3(E, scale3v(dir, 2.2));
+        eye = add3(E, add3(scale3v(side, 8.6), add3(scale3v(up, 3.2), scale3v(dir, 2.0))));
         this.follow = 'earth';
         break;
       }
