@@ -190,6 +190,21 @@ export class Renderer {
     }
 
     /* ---------- 4. 地球 + 月球 ---------- */
+    // 日食时地球表面被月球遮挡、月食时月球表面被地球遮挡：
+    // 把遮挡体传给着色器做解析遮挡，被遮住的区域会变暗（而不是反常地亮）。
+    const occEarth = eclipse && eclipse.mode === 'solar' && eclipse.occluderPos
+      ? {
+        pos: eclipse.occluderPos,
+        // 解析角近似会低估半影范围（真实半影在地球处半径约 0.84，近似只有 ~0.4），
+        // 用略大的有效半径补偿，让"本影/半影扫过地球"的暗区在画面上看得见。
+        radius: eclipse.occluderRadius * 1.6,
+        redTint: false,
+      }
+      : null;
+    const occMoon = eclipse && eclipse.mode === 'lunar' && eclipse.occluderPos
+      ? { pos: eclipse.occluderPos, radius: eclipse.occluderRadius, redTint: true }
+      : null;
+
     this._drawBody({
       model: scene.earth.model,
       normal: scene.earth.normal,
@@ -198,6 +213,7 @@ export class Renderer {
       emissive: 0,
       ambient: this.config.render.ambient,
       view, proj,
+      occlusion: occEarth,
     });
     this._drawBody({
       model: scene.moon.model,
@@ -207,6 +223,7 @@ export class Renderer {
       emissive: 0,
       ambient: this.config.render.ambient,
       view, proj,
+      occlusion: occMoon,
     });
 
     /* ---------- 5. 小行星带 ---------- */
@@ -224,8 +241,8 @@ export class Renderer {
       this._drawOrbitLines(scene.orbitLines, view, proj);
     }
 
-    /* ---------- 8. 日食阴影锥 ---------- */
-    if (eclipse && (eclipse.umbra || eclipse.penumbra)) {
+    /* ---------- 8. 日食阴影锥（可用面板开关关闭） ---------- */
+    if (eclipse && (eclipse.umbra || eclipse.penumbra) && state.showCones !== false) {
       this._drawEclipseCones(eclipse, view, proj);
     }
 
@@ -240,7 +257,7 @@ export class Renderer {
   }
 
   /* ---------------- 天体 ---------------- */
-  _drawBody({ model, normal, texture, color, emissive, ambient, view, proj }) {
+  _drawBody({ model, normal, texture, color, emissive, ambient, view, proj, occlusion = null }) {
     const gl = this.gl;
     const { program, uniforms: u } = this.bodyProgram;
 
@@ -257,6 +274,18 @@ export class Renderer {
     gl.uniform3fv(u.uBaseColor, new Float32Array(color || [1, 1, 1]));
     gl.uniform1f(u.uAmbient, ambient);
     gl.uniform1f(u.uEmissive, emissive);
+    gl.uniform1f(u.uSunRadius, this.config.sun.radius);
+
+    // 日食/月食的解析遮挡（其余天体关闭）
+    if (occlusion) {
+      gl.uniform3fv(u.uOccPos, new Float32Array(occlusion.pos));
+      gl.uniform1f(u.uOccRadius, occlusion.radius);
+      gl.uniform1f(u.uOccStrength, 1.0);
+      gl.uniform1f(u.uOccRedTint, occlusion.redTint ? 1.0 : 0.0);
+    } else {
+      gl.uniform1f(u.uOccStrength, 0.0);
+      gl.uniform1f(u.uOccRedTint, 0.0);
+    }
 
     if (texture) {
       bindTexture(gl, texture, 0);

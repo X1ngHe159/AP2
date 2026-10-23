@@ -49,6 +49,7 @@ export class CameraController {
   constructor(config) {
     this.cfg = config.camera;
     this.renderCfg = config.render;
+    this.earthCfg = config.earth;
 
     this.target = [...this.cfg.target];
     this.orbit = { ...this.cfg.defaultOrbit };
@@ -61,8 +62,11 @@ export class CameraController {
     this.trackballMode = false;
     this.trackball = new VirtualTrackball({ radius: 0.8 });
 
-    // 预设视角的"跟随天体"模式：'earth' | 'moon' | null
+    // 预设视角的"跟随天体"模式：'earth' | 'moon' | 'earth-surface' | null
     this.follow = null;
+    // 地表视角看向哪：'sun'（日食）| 'moon'（月食）
+    this.surfaceLook = 'sun';
+    this.surfaceFovDeg = 80;           // 地表视角的宽视野
 
     this.dragging = false;
     this.lastPointer = null;
@@ -101,6 +105,30 @@ export class CameraController {
    * @param {{earth?:number[], moon?:number[]}} [positions] 天体世界位置（跟随模式用）
    */
   update(dt, positions) {
+    // 地表视角：相机贴在地球表面（日-地连线上向太阳的一侧），每帧跟随天体位置重算，
+    // 抬头看太阳（日食）或看月亮（月食）。这是 E2 的"地面观测者"视角。
+    // 相机会稍微偏离日-地连线：日食时月球只比太阳大一点点，完全正对会遮成一片黑，
+    // 偏一点才能看到"钻石环"（太阳边缘的一线光）；月食时让月亮不完全居中。
+    if (this.follow === 'earth-surface' && positions && positions.earth) {
+      const E = positions.earth;
+      const R = this.earthCfg.radius;
+      if (this.surfaceLook === 'moon' && positions.moon) {
+        const moonDir = normalize3(sub3(positions.moon, E));
+        const side = normalize3(cross3([0, 1, 0], moonDir));
+        this.eye = add3(E, add3(scale3v(moonDir, R + 0.18), scale3v(side, 0.10)));
+        this.target = [...positions.moon];
+      } else {
+        const sunDir = normalize3(scale3v(E, -1));   // 地球 → 太阳（太阳在原点）
+        const side = normalize3(cross3([0, 1, 0], sunDir));
+        this.eye = add3(E, add3(
+          scale3v(sunDir, R + 0.18),
+          add3(scale3v(side, 0.06), scale3v([0, 1, 0], 0.04))
+        ));
+        this.target = [0, 0, 0];
+      }
+      return;
+    }
+
     // 跟随模式：预设视角（地球/月球特写、日食/月食）把 target 钉在天体上，
     // 这样地球继续公转时画面不会把天体甩出去。
     if (this.follow) {
@@ -285,7 +313,10 @@ export class CameraController {
   }
 
   getProjMatrix() {
-    const { fovDeg, near, far } = this.renderCfg;
+    const { near, far } = this.renderCfg;
+    // 地表视角用更宽的视野：本项目的月球轨道被压缩到只有地球半径的 ~1.7 倍，
+    // 站在地表仰望月亮时它会显得非常大，80° 视野才能同时看到月亮边缘与天空。
+    const fovDeg = this.follow === 'earth-surface' ? this.surfaceFovDeg : this.renderCfg.fovDeg;
     if (this.projection === 'ortho') {
       // 正交投影：取"与透视在 target 平面处同样视野"的半高，
       // 这样切换投影时画面大小可比，差异只体现在近大远小/平行线。
@@ -373,9 +404,9 @@ export class CameraController {
         break;
       }
       case 'solar-eclipse': {
-        // 侧上方看"月球 → 地球"的阴影锥：月球在地球向阳一侧
-        target = add3(E, scale3v(dir, -0.7));
-        eye = add3(E, add3(scale3v(side, 5.6), add3(scale3v(up, 2.4), scale3v(dir, 0.6))));
+        // 从向阳侧上方看：既能看见地球亮面，也能看见落在地球上的本影/半影暗区
+        target = add3(E, scale3v(dir, -0.3));
+        eye = add3(E, add3(scale3v(side, 5.4), add3(scale3v(up, 2.8), scale3v(dir, -2.4))));
         this.follow = 'earth';
         break;
       }
@@ -384,6 +415,22 @@ export class CameraController {
         target = add3(E, scale3v(dir, 1.6));
         eye = add3(E, add3(scale3v(side, 8.0), add3(scale3v(up, 3.0), scale3v(dir, 1.6))));
         this.follow = 'earth';
+        break;
+      }
+      case 'earth-surface': {
+        // 地面观测者视角：站在地球表面（面向太阳一侧的外壳外一点点），抬头看天。
+        // 日食时看太阳被月球遮住，月食时看月亮被地球本影染红。
+        const R = this.earthCfg.radius;
+        if (this.surfaceLook === 'moon') {
+          const moonDir = normalize3(sub3(M, E));
+          eye = add3(E, scale3v(moonDir, R + 0.18));
+          target = [...M];
+        } else {
+          const sunDir = normalize3(scale3v(E, -1));
+          eye = add3(E, scale3v(sunDir, R + 0.18));
+          target = [0, 0, 0];
+        }
+        this.follow = 'earth-surface';
         break;
       }
       case 'overview':
@@ -446,9 +493,17 @@ export class CameraController {
     }
   }
 
+  /** 地表视角看向哪里：'sun' = 日食看太阳，'moon' = 月食看月亮 */
+  setSurfaceLook(kind) {
+    this.surfaceLook = kind === 'moon' ? 'moon' : 'sun';
+  }
+
   /** 供 HUD 显示 */
   describeMode() {
     if (this.trackballMode) return '轨迹球（E3）';
+    if (this.follow === 'earth-surface') {
+      return this.surfaceLook === 'moon' ? '地表 · 望月' : '地表 · 观日';
+    }
     if (this.follow === 'earth') return '跟随地球';
     if (this.follow === 'moon') return '跟随月球';
     if (this.roamEnabled) return '预设漫游';

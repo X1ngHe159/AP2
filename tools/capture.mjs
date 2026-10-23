@@ -255,6 +255,16 @@ const STILLS = [
     query: 'preset=overview&proj=persp&t=4.2&ui=0',
     desc: '土星环细节（带卡西尼缝）与木星',
   },
+  {
+    name: '11-solar-eclipse-surface',
+    query: 'eclipse=solar&preset=earth-surface&ui=1',
+    desc: '日食 · 从地球表面抬头看：月球遮住太阳（E2 地表视角）',
+  },
+  {
+    name: '12-lunar-eclipse-surface',
+    query: 'eclipse=lunar&preset=earth-surface&ui=1',
+    desc: '月食 · 从地球表面抬头看：被地球本影染红的血月（E2 地表视角）',
+  },
 ];
 
 async function doStills(cdp) {

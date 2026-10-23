@@ -23,6 +23,7 @@ export function createUI(state, handlers = {}) {
     showBelt: $('show-belt'),
     showRings: $('show-rings'),
     showStars: $('show-stars'),
+    showCones: $('show-cones'),
     trackball: $('trackball-mode'),
     btnPause: $('btn-pause'),
     btnRoam: $('btn-roam'),
@@ -69,6 +70,7 @@ export function createUI(state, handlers = {}) {
   bindCheck(els.showBelt, 'showBelt');
   bindCheck(els.showRings, 'showRings');
   bindCheck(els.showStars, 'showStars');
+  bindCheck(els.showCones, 'showCones');
   bindCheck(els.trackball, 'trackball');
 
   /* ---------------- 按钮 ---------------- */
@@ -82,6 +84,8 @@ export function createUI(state, handlers = {}) {
     ['btn-earth', 'earth'],
     ['btn-solar', 'solar-eclipse'],
     ['btn-lunar', 'lunar-eclipse'],
+    ['btn-surface', 'earth-surface'],
+    ['btn-cones', 'cones'],
   ];
   for (const [id, action] of buttons) {
     const el = $(id);
@@ -111,6 +115,7 @@ export function createUI(state, handlers = {}) {
     els.showBelt.checked = state.showBelt;
     els.showRings.checked = state.showRings;
     els.showStars.checked = state.showStars;
+    els.showCones.checked = state.showCones;
     els.trackball.checked = state.trackball;
 
     setPauseLabel(state.paused);

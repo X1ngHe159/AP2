@@ -22,7 +22,9 @@ const CDP_PORT = 9371;
 const args = process.argv.slice(2);
 const urlFlagIndex = args.indexOf('--url');
 const REMOTE_BASE = urlFlagIndex >= 0 ? args[urlFlagIndex + 1] : null;
-const positional = args.filter((_, i) => i !== urlFlagIndex && i !== urlFlagIndex + 1);
+const positional = urlFlagIndex >= 0
+  ? args.filter((_, i) => i !== urlFlagIndex && i !== urlFlagIndex + 1)
+  : args;
 const QUERY = positional[0] || 'capture=1&t=0';
 const OUT = positional[1] || path.join(os.tmpdir(), 'shot.png');
 

@@ -35,6 +35,7 @@ const state = {
   showBelt: true,
   showRings: true,
   showStars: true,
+  showCones: true,           // 日食/月食的辅助阴影锥（红色半透明区域）
   trackball: false,
   demoWrongOrder: false,
   eclipseMode: 'off',
@@ -176,6 +177,10 @@ function computeEclipse() {
   const receiverPos = solar ? earthPos : moonPos;
 
   return {
+    // 供着色器做"遮挡区变暗"的解析遮挡（日食：地球被月球挡；月食：月球被地球挡）
+    mode: solar ? 'solar' : 'lunar',
+    occluderPos,
+    occluderRadius,
     umbra: computeUmbra({
       sunPos,
       sunRadius: S.radius,
@@ -294,6 +299,13 @@ function onKeyDown(event) {
     case 'Digit4':
       enterEclipse('lunar');
       break;
+    case 'Digit5':
+      enterEclipse(state.eclipseMode === 'lunar' ? 'lunar' : 'solar', 'surface');
+      break;
+    case 'KeyC':
+      state.showCones = !state.showCones;
+      ui.syncAll();
+      break;
     default:
       break;
   }
@@ -316,6 +328,11 @@ function onButton(action) {
     case 'earth': applyPreset('earth'); break;
     case 'solar-eclipse': enterEclipse('solar'); break;
     case 'lunar-eclipse': enterEclipse('lunar'); break;
+    case 'earth-surface': enterEclipse(state.eclipseMode === 'lunar' ? 'lunar' : 'solar', 'surface'); break;
+    case 'cones':
+      state.showCones = !state.showCones;
+      ui.syncAll();
+      break;
     default: break;
   }
 }
@@ -376,8 +393,12 @@ function applyPreset(name) {
   });
 }
 
-/** 进入日食 / 月食演示：把时间对齐到共线时刻，暂停运动，切换预设视角 */
-function enterEclipse(mode) {
+/**
+ * 进入日食 / 月食演示：把时间对齐到共线时刻，暂停运动，切换预设视角。
+ * @param {'solar'|'lunar'} mode
+ * @param {'side'|'surface'} [view] 'surface' = 从地球表面抬头看（日食时看太阳、月食时看月亮）
+ */
+function enterEclipse(mode, view = 'side') {
   state.eclipseMode = mode;
   state.paused = true;
   state.trackball = false;
@@ -387,7 +408,12 @@ function enterEclipse(mode) {
   state.spinTime = state.simTime;
   updateScene();
 
-  camera.setPreset(mode === 'solar' ? 'solar-eclipse' : 'lunar-eclipse', scene.positions);
+  if (view === 'surface') {
+    camera.setSurfaceLook(mode === 'solar' ? 'sun' : 'moon');
+    camera.setPreset('earth-surface', scene.positions);
+  } else {
+    camera.setPreset(mode === 'solar' ? 'solar-eclipse' : 'lunar-eclipse', scene.positions);
+  }
   ui.syncAll();
   ui.setRoamLabel(camera.roamEnabled);
 }
@@ -446,6 +472,7 @@ function runCapture(params) {
   state.showBelt = flag('belt', true);
   state.showRings = flag('rings', true);
   state.showStars = flag('stars', true);
+  state.showCones = flag('cones', true);
   state.demoWrongOrder = flag('wrongOrder', false);
 
   state.simTime = num('t', 0);
@@ -471,6 +498,12 @@ function runCapture(params) {
     const preset = params.get('preset')
       || (eclipseMode === 'solar' ? 'solar-eclipse'
         : eclipseMode === 'lunar' ? 'lunar-eclipse' : 'overview');
+    // 地表视角：日食时抬头看太阳，月食时抬头看月亮
+    if (preset === 'earth-surface') {
+      camera.setSurfaceLook(
+        params.get('look') === 'moon' || eclipseMode === 'lunar' ? 'moon' : 'sun'
+      );
+    }
     camera.setPreset(preset, scene.positions);
   }
 

@@ -48,8 +48,38 @@ uniform vec3  uBaseColor;     // 无纹理时的基础色
 uniform float uUseTexture;    // 0/1
 uniform float uAmbient;       // 环境光强度
 uniform float uEmissive;      // 1 = 自发光（太阳）
+uniform float uSunRadius;     // 太阳半径（食的遮挡计算用）
+
+// 日食/月食的解析遮挡（不需要阴影贴图）：
+// 对被遮挡的天体，计算"从表面点看太阳时，遮挡体圆盘与太阳圆盘的角交叠比例"。
+uniform vec3  uOccPos;        // 遮挡体（月球/地球）世界位置
+uniform float uOccRadius;     // 遮挡体半径
+uniform float uOccStrength;   // 0 = 不做遮挡计算
+uniform float uOccRedTint;    // 1 = 月食时的暗红色（血月）
 
 out vec4 fragColor;
+
+/**
+ * 返回遮挡比例 f ∈ [0,1]：0 = 太阳完全可见，1 = 太阳被完全遮挡。
+ * 用"太阳角半径 α、遮挡体角半径 β、两者角距 δ"的线性交叠近似，
+ * 本影区 f≈1、半影区 f 平滑过渡，视觉上就是软阴影。
+ */
+float eclipseOcclusion() {
+    if (uOccStrength <= 0.0) return 0.0;
+    vec3 toSun = uSunPos - vWorldPos;
+    float dS = length(toSun);
+    vec3 L = toSun / max(dS, 1e-4);
+
+    vec3 toOcc = uOccPos - vWorldPos;
+    float dO = length(toOcc);
+    vec3 Lo = toOcc / max(dO, 1e-4);
+
+    float delta = acos(clamp(dot(L, Lo), -1.0, 1.0));          // 角距
+    float alpha = asin(clamp(uSunRadius / dS, 0.0, 1.0));      // 太阳角半径
+    float beta  = asin(clamp(uOccRadius / dO, 0.0, 1.0));      // 遮挡体角半径
+
+    return clamp((alpha + beta - delta) / max(2.0 * alpha, 1e-4), 0.0, 1.0);
+}
 
 void main() {
     vec3 base = uUseTexture > 0.5 ? texture(uTexture, vTexCoord).rgb : uBaseColor;
@@ -58,10 +88,20 @@ void main() {
     vec3 N = normalize(vNormal);
     vec3 L = normalize(uSunPos - vWorldPos);
     float ndl = max(dot(N, L), 0.0);
-    float lighting = uAmbient + (1.0 - uAmbient) * ndl;
 
-    // 太阳不参与光照（emissive=1 时直接用纹理颜色）
+    // 日食/月食：太阳被遮住的部分不再照亮表面（否则本影区会反常地亮）
+    float occ = eclipseOcclusion();
+    float sunVisible = 1.0 - 0.94 * occ;
+
+    float lighting = uAmbient + (1.0 - uAmbient) * ndl * sunVisible;
     vec3 color = mix(base * lighting, base, uEmissive);
+
+    // 月全食：进入地球本影的月球表面呈暗红色（模拟地球大气折射的红光）
+    if (uOccRedTint > 0.5) {
+        vec3 blood = base * vec3(1.15, 0.28, 0.15) * 0.42;
+        color = mix(color, blood, occ * 0.9);
+    }
+
     fragColor = vec4(color, 1.0);
 }
 `;
